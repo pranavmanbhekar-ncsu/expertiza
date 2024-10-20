@@ -5,6 +5,7 @@ class TeamsUser < ApplicationRecord
   has_paper_trail
   # attr_accessible :user_id, :team_id # unnecessary protected attributes
 
+  # Model to refactor
   def name(ip_address = nil)
     name = user.name(ip_address)
 
