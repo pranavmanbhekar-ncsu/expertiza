@@ -545,7 +545,7 @@ Expertiza::Application.routes.draw do
     end
   end
 
-  resources :teams_users, only: %i[new create update] do
+  resources :teams_participants, only: %i[new create update] do
     collection do
       post :list
       post :update_duties
@@ -556,7 +556,7 @@ Expertiza::Application.routes.draw do
   resources :popup do
     collection do
       get :reviewer_details_popup
-      get :team_users_popup
+      get :team_participants_popup
       get :view_review_scores_popup
       get :self_review_popup
       get :author_feedback_popup

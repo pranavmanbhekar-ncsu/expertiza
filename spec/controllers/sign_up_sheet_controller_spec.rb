@@ -503,7 +503,7 @@ describe SignUpSheetController do
   describe '#sign_up' do
    context 'when SignUpSheet.signup_team method returns nil' do
      it 'shows an error flash message and redirects to sign_up_sheet#list page' do
-       allow(Team).to receive(:find_team_users).with(1, 6).and_return([team])
+       allow(Team).to receive(:find_team_participants).with(1, 6).and_return([team])
        request_params = { id: 1 }
        user_session = { user: instructor }
        
@@ -542,10 +542,10 @@ describe SignUpSheetController do
 
         context 'when creating team related objects successfully' do
           it 'shows a flash success message and redirects to assignment#edit page' do
-            allow(Team).to receive(:find_team_users).with('1', 8).and_return([team])
+            allow(Team).to receive(:find_team_participants).with('1', 8).and_return([team])
             allow(Team).to receive(:find).and_return(team)
             allow(team).to receive(:t_id).and_return(1)
-            allow(TeamsUser).to receive(:team_id).with('1', 8).and_return(1)
+            allow(teamsparticipant).to receive(:team_id).with('1', 8).and_return(1)
             allow(SignedUpTeam).to receive(:topic_id).with('1', 8).and_return(1)
             allow(SignUpSheet).to receive(:signup_team).and_return(true)
             allow_any_instance_of(SignedUpTeam).to receive(:save).and_return(team)
@@ -562,11 +562,11 @@ describe SignUpSheetController do
 
         context 'when creating team related objects unsuccessfully' do
           it 'shows a flash error message and redirects to assignment#edit page' do
-            allow(Team).to receive(:find_team_users).with('1', 8).and_return([])
+            allow(Team).to receive(:find_team_participants).with('1', 8).and_return([])
             allow(User).to receive(:find).with(8).and_return(student)
             allow(Assignment).to receive(:find).with(1).and_return(assignment)
-            allow(TeamsUser).to receive(:create).with(user_id: 8, team_id: 1).and_return(double('TeamsUser', id: 1))
-            allow(TeamUserNode).to receive(:create).with(parent_id: 1, node_object_id: 1).and_return(double('TeamUserNode', id: 1))
+            allow(teamsparticipant).to receive(:create).with(user_id: 8, team_id: 1).and_return(double('teamsparticipant', id: 1))
+            allow(teamparticipantNode).to receive(:create).with(parent_id: 1, node_object_id: 1).and_return(double('teamparticipantNode', id: 1))
             request_params = {
               username: 'no name',
               assignment_id: 1
@@ -628,7 +628,7 @@ describe SignUpSheetController do
       it 'shows a flash success message and redirects to sign_up_sheet#list page' do
         allow(team).to receive(:submitted_files).and_return([])
         allow(team).to receive(:hyperlinks).and_return([])
-        allow(Team).to receive(:find_team_users).with(1, 6).and_return([team])
+        allow(Team).to receive(:find_team_participants).with(1, 6).and_return([team])
         allow(team).to receive(:t_id).and_return(1)
         request_params = { id: 1, topic_id: 1 }
         user_session = { user: instructor }
@@ -642,7 +642,7 @@ describe SignUpSheetController do
   describe '#delete_signup_as_instructor' do
     before(:each) do
       allow(Team).to receive(:find).with('1').and_return(team)
-      allow(TeamsUser).to receive(:find_by).with(team_id: 1).and_return(double('TeamsUser', user: student))
+      allow(teamsparticipant).to receive(:find_by).with(team_id: 1).and_return(double('teamsparticipant', user: student))
       allow(AssignmentParticipant).to receive(:find_by).with(user_id: 8, parent_id: 1).and_return(participant)
       allow(participant).to receive(:team).and_return(team)
     end
@@ -683,7 +683,7 @@ describe SignUpSheetController do
       it 'shows a flash success message and redirects to assignment#edit page' do
         allow(team).to receive(:submitted_files).and_return([])
         allow(team).to receive(:hyperlinks).and_return([])
-        allow(Team).to receive(:find_team_users).with(1, 6).and_return([team])
+        allow(Team).to receive(:find_team_participants).with(1, 6).and_return([team])
         allow(team).to receive(:t_id).and_return(1)
         request_params = { id: 1, topic_id: 1 }
         user_session = { user: instructor }
@@ -761,7 +761,7 @@ describe SignUpSheetController do
   describe '#show_team' do
     it 'renders show_team page' do
       allow(SignedUpTeam).to receive(:where).with(topic_id: 1).and_return([signed_up_team])
-      allow(TeamsUser).to receive(:where).with(team_id: 1).and_return([double('TeamsUser', user_id: 1)])
+      allow(teamsparticipant).to receive(:where).with(team_id: 1).and_return([double('teamsparticipant', user_id: 1)])
       allow(User).to receive(:find).with(1).and_return(student)
       request_params = { assignment_id: 1, id: 1 }
       get :show_team, params: request_params
@@ -771,8 +771,8 @@ describe SignUpSheetController do
 
   describe '#switch_original_topic_to_approved_suggested_topic' do
     it 'redirects to sign_up_sheet#list page' do
-      allow(TeamsUser).to receive(:where).with(user_id: 6).and_return([double('TeamsUser', team_id: 1)])
-      allow(TeamsUser).to receive(:where).with(team_id: 1).and_return([double('TeamsUser', team_id: 1, user_id: 8)])
+      allow(teamsparticipant).to receive(:where).with(user_id: 6).and_return([double('teamsparticipant', team_id: 1)])
+      allow(teamsparticipant).to receive(:where).with(team_id: 1).and_return([double('teamsparticipant', team_id: 1, user_id: 8)])
       allow(Team).to receive(:find).with(1).and_return(team)
       team.parent_id = 1
       allow(SignedUpTeam).to receive(:where).with(team_id: 1, is_waitlisted: 0).and_return([signed_up_team])

@@ -1,0 +1,74 @@
+class TeamsParticipant < ApplicationRecord
+  belongs_to :participant
+  belongs_to :team
+  has_one :team_participant_node, foreign_key: 'node_object_id', dependent: :destroy
+  has_paper_trail
+  # attr_accessible :user_id, :team_id # unnecessary protected attributes
+
+  def name(ip_address = nil)
+    name = participant.name(ip_address)
+
+    # E2115 Mentor Management
+    # Indicate that someone is a Mentor in the UI. The view code is
+    # often hard to follow, and this is the best place we could find
+    # for this to go.
+    name += ' (Mentor)' if MentorManagement.participant_a_mentor?(participant)
+    name
+  end
+
+  def delete
+    TeamParticipantNode.find_by(node_object_id: id).destroy
+    team = self.team
+    destroy
+    team.delete if team.teams_participants.empty?
+  end
+
+  def get_team_members(team_id); end
+
+  # Removes entry in the TeamParticipants table for the given participant and given team id
+  def self.remove_team(participant_id, team_id)
+    team_participant = TeamsParticipant.where('participant_id = ? and team_id = ?', participant_id, team_id).first
+    team_participant&.destroy
+  end
+
+  # Returns the first entry in the TeamParticipants table for a given team id
+  def self.first_by_team_id(team_id)
+    TeamsParticipant.where('team_id = ?', team_id).first
+  end
+
+  # Determines whether a team is empty of not
+  def self.team_empty?(team_id)
+    team_members = TeamsParticipant.where('team_id = ?', team_id)
+    team_members.blank?
+  end
+
+  # Add member to the team they were invited to and accepted the invite for
+  def self.add_member_to_invited_team(invitee_participant_id, invited_participant_id, assignment_id)
+    can_add_member = false
+    participants_teams = TeamsParticipant.where(['participant_id = ?', invitee_participant_id])
+    participants_teams.each do |team|
+      new_team = AssignmentTeam.where(['id = ? and parent_id = ?', team.team_id, assignment_id]).first
+      unless new_team.nil?
+        can_add_member = new_team.add_member(Participant.find(invited_participant_id), assignment_id)
+      end
+    end
+    can_add_member
+  end
+
+  # 2015-5-27 [zhewei]:
+  # We just remove the topic_id field from the participants table.
+  def self.team_id(assignment_id, participant_id)
+    # team_id variable represents the team_id for this participant in this assignment
+    team_id = nil
+    teams_participants = TeamsParticipant.where(participant_id: participant_id)
+    teams_participants.each do |teams_participant|
+      next if teams_participant.team_id.nil?
+      team = Team.find(teams_participant.team_id)
+      if team.parent_id == assignment_id
+        team_id = teams_participant.team_id
+        break
+      end
+    end
+    team_id
+  end
+end
