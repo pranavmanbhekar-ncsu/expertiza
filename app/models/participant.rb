@@ -5,6 +5,8 @@ class Participant < ApplicationRecord
   belongs_to :user
   belongs_to :topic, class_name: 'SignUpTopic', inverse_of: false
   belongs_to :assignment, foreign_key: 'parent_id', inverse_of: false
+  has_many :teams_participants, dependent: :destroy
+  has_many :teams, through: :teams_participants
   has_many   :join_team_requests, dependent: :destroy
   has_many   :reviews, class_name: 'ResponseMap', foreign_key: 'reviewer_id', dependent: :destroy, inverse_of: false
   has_many   :team_reviews, class_name: 'ReviewResponseMap', foreign_key: 'reviewer_id', dependent: :destroy, inverse_of: false
