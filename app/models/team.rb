@@ -1,6 +1,6 @@
 class Team < ApplicationRecord
-  has_many :teams_users, dependent: :destroy
-  has_many :users, through: :teams_users
+  has_many :teams_participants, dependent: :destroy
+  has_many :participants, through: :teams_participants
   has_many :join_team_requests, dependent: :destroy
   has_one :team_node, foreign_key: :node_object_id, dependent: :destroy
   has_many :signed_up_teams, dependent: :destroy
@@ -8,7 +8,7 @@ class Team < ApplicationRecord
   has_paper_trail
 
   scope :find_team_for_assignment_and_user, lambda { |assignment_id, user_id|
-    joins(:teams_users).where('teams.parent_id = ? AND teams_users.user_id = ?', assignment_id, user_id)
+    joins(:teams_participants).where('teams.parent_id = ? AND teams_participants.participant_id = ?', assignment_id, user_id)
   }
 
   # Allowed types of teams -- ASSIGNMENT teams or COURSE teams
@@ -317,8 +317,8 @@ class Team < ApplicationRecord
   end
 
   def self.find_team_users(assignment_id, user_id)
-    TeamsUser.joins('INNER JOIN teams ON teams_users.team_id = teams.id')
+    TeamsUser.joins('INNER JOIN teams ON teams_participants.team_id = teams.id')
              .select('teams.id as t_id')
-             .where('teams.parent_id = ? and teams_users.user_id = ?', assignment_id, user_id)
+             .where('teams.parent_id = ? and teams_participants.participant_id = ?', assignment_id, user_id)
   end
 end
