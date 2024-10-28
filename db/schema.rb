@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20241024000551) do
+ActiveRecord::Schema.define(version: 20241028030326) do
 
   create_table "account_requests", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=latin1" do |t|
     t.string "name"
@@ -528,6 +528,7 @@ ActiveRecord::Schema.define(version: 20241024000551) do
     t.float "Hamer", limit: 24, default: 1.0
     t.float "Lauw", limit: 24, default: 0.0
     t.integer "duty_id"
+    t.boolean "can_mentor"
     t.index ["duty_id"], name: "index_participants_on_duty_id"
     t.index ["user_id"], name: "fk_participant_users"
   end

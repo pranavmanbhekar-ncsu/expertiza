@@ -182,8 +182,8 @@ class ParticipantsController < ApplicationController
       team_info = {}
       team_info[:name] = team.name(session[:ip])
       users = []
-      team.users { |team_user| users.append(get_user_info(team_user, assignment)) }
-      team_info[:users] = users
+      team.participants { |team_participant| participants.append(get_user_info(team_participant, assignment)) }
+      team_info[:participants] = participants
       @has_topics = get_signup_topics_for_assignment(assignment_id, team_info, team.id)
       team_without_topic = SignedUpTeam.where('team_id = ?', team.id).none?
       next if @has_topics && team_without_topic
@@ -202,14 +202,14 @@ class ParticipantsController < ApplicationController
   end
 
   # Get the user info from the team user
-  def get_user_info(team_user, assignment)
+  def get_user_info(team_participant, assignment)
     user = {}
-    user[:name] = team_user.name
-    user[:fullname] = team_user.fullname
+    user[:name] = team_participant.name
+    user[:fullname] = team_participant.fullname
     # set by default
     permission_granted = false
     assignment.participants.each do |participant|
-      permission_granted = participant.permission_granted? if team_user.id == participant.user.id
+      permission_granted = participant.permission_granted? if team_participant.id == participant.user.id
     end
     # If permission is granted, set the publisting rights string
     user[:pub_rights] = permission_granted ? 'Granted' : 'Denied'
