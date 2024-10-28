@@ -6,10 +6,10 @@ describe Team do
   let(:user) { build(:student, id: 1, name: 'no name', fullname: 'no one', participants: [participant]) }
   let(:user2) { build(:student, id: 2) }
   let(:user3) { build(:student, id: 3) }
-  let(:team) { build(:assignment_team, id: 1, name: 'no team', users: [user]) }
-  let(:team_user) { build(:team_user, id: 1, user: user) }
+  let(:team) { build(:assignment_team, id: 1, name: 'no team', participants: [participant]) }
+  let(:team_participant) { build(:team_participant, id: 1, participant: participant) }
   before(:each) do
-    allow(TeamsUser).to receive(:where).with(team_id: 1).and_return([team_user])
+    allow(TeamsParticipant).to receive(:where).with(team_id: 1).and_return([team_participant])
   end
   describe '#participant' do
     it 'gets the participants of current team, by default returns an empty array' do
@@ -25,8 +25,8 @@ describe Team do
 
   describe '#delete' do
     it 'deletes the current team and related objects and return self' do
-      allow(TeamsUser).to receive_message_chain(:where, :find_each).with(team_id: 1).with(no_args).and_yield(team_user)
-      allow(team_user).to receive(:destroy).and_return(team_user)
+      allow(TeamsParticipant).to receive_message_chain(:where, :find_each).with(team_id: 1).with(no_args).and_yield(team_participant)
+      allow(team_participant).to receive(:destroy).and_return(team_participant)
       node = double('TeamNode')
       allow(TeamNode).to receive(:find_by).with(node_object_id: 1).and_return(node)
       allow(node).to receive(:destroy).and_return(node)
@@ -46,16 +46,16 @@ describe Team do
     end
   end
 
-  describe '#user?' do
-    context 'when users in current team includes the parameterized user' do
+  describe '#participant?' do
+    context 'when participants in current team includes the parameterized participant' do
       it 'returns true' do
-        expect(team.user?(user)).to be true
+        expect(team.participant?(participant)).to be true
       end
     end
 
-    context 'when users in current team does not include the parameterized user' do
+    context 'when participants in current team does not include the parameterized participant' do
       it 'returns false' do
-        expect(team.user?(double('User'))).to be false
+        expect(team.participant?(double('participant'))).to be false
       end
     end
   end
@@ -89,21 +89,21 @@ describe Team do
   end
 
   describe '#add_member' do
-    context 'when parameterized user has already joined in current team' do
+    context 'when parameterized participant has already joined in current team' do
       it 'raise an error' do
-        expect { team.add_member(user) }.to raise_error(RuntimeError, "The user #{user.name} is already a member of the team #{team.name}")
+        expect { team.add_member(participant) }.to raise_error(RuntimeError, "The participant #{participant.name} is already a member of the team #{team.name}")
       end
     end
 
-    context 'when parameterized user did not join in current team yet' do
+    context 'when parameterized participant did not join in current team yet' do
       context 'when current team is not full' do
         it 'does not raise an error' do
-          allow_any_instance_of(Team).to receive(:user?).with(user).and_return(false)
+          allow_any_instance_of(Team).to receive(:participant?).with(participant).and_return(false)
           allow_any_instance_of(Team).to receive(:full?).and_return(false)
-          allow(TeamsUser).to receive(:create).with(user_id: 1, team_id: 1).and_return(team_user)
+          allow(TeamsParticipant).to receive(:create).with(participant_id: 1, team_id: 1).and_return(team_participant)
           allow(TeamNode).to receive(:find_by).with(node_object_id: 1).and_return(double('TeamNode', id: 1))
-          allow_any_instance_of(Team).to receive(:add_participant).with(1, user).and_return(double('Participant'))
-          expect(team.add_member(user)).to be true
+          allow_any_instance_of(Team).to receive(:add_participant).with(1, participant).and_return(double('Participant'))
+          expect(team.add_member(participant)).to be true
         end
       end
     end
@@ -117,9 +117,9 @@ describe Team do
 
   describe '#copy_members' do
     it 'copies members from current team to a new team' do
-      allow(TeamsUser).to receive(:create).with(team_id: 2, user_id: 1).and_return(team_user)
+      allow(TeamsParticipant).to receive(:create).with(team_id: 2, participant_id: 1).and_return(team_participant)
       allow(Assignment).to receive(:find).with(1).and_return(assignment)
-      expect(team.copy_members(double('Team', id: 2))).to eq([team_user])
+      expect(team.copy_members(double('Team', id: 2))).to eq([team_participant])
     end
   end
 
@@ -144,9 +144,9 @@ describe Team do
     it 'forms teams and assigns team members automatically' do
       allow(Participant).to receive(:where).with(parent_id: 1, type: 'AssignmentParticipant', can_mentor: [false, nil])
                                            .and_return([participant, participant2, participant3])
-      allow(User).to receive(:find).with(1).and_return(user)
-      allow(User).to receive(:find).with(2).and_return(user2)
-      allow(User).to receive(:find).with(3).and_return(user3)
+      allow(Participant).to receive(:find).with(1).and_return(participant)
+      allow(Participant).to receive(:find).with(2).and_return(participant2)
+      allow(Participant).to receive(:find).with(3).and_return(participant3)
       allow(Team).to receive(:where).with(parent_id: 1, type: 'AssignmentTeam').and_return([team])
       allow(Team).to receive(:size).with(any_args).and_return(1)
       allow_any_instance_of(Team).to receive(:add_member).with(any_args).and_return(true)
@@ -161,19 +161,19 @@ describe Team do
   end
 
   describe '.import_team_members' do
-    context 'when cannot find a user by name' do
+    context 'when cannot find a participant by name' do
       it 'raises an ImportError' do
-        allow(User).to receive(:find_by).with(name: 'no name').and_return(nil)
+        allow(Participant).to receive(:find_by).with(name: 'no name').and_return(nil)
         expect { team.import_team_members(teammembers: ['no name']) }.to raise_error(ImportError,
-                                                                                     "The user 'no name' was not found. <a href='/users/new'>Create</a> this user?")
+                                                                                     "The participant 'no name' was not found. <a href='/participants/new'>Create</a> this participant?")
       end
     end
 
-    context 'when can find certain user' do
-      it 'adds the user to current team' do
-        allow(User).to receive(:find_by).with(name: 'no name').and_return(user)
-        allow(TeamsUser).to receive(:find_by).with(team_id: 1, user_id: 1).and_return(nil)
-        allow_any_instance_of(Team).to receive(:add_member).with(user).and_return(true)
+    context 'when can find certain participant' do
+      it 'adds the participant to current team' do
+        allow(Participant).to receive(:find_by).with(name: 'no name').and_return(participant)
+        allow(TeamsParticipant).to receive(:find_by).with(team_id: 1, participant_id: 1).and_return(nil)
+        allow_any_instance_of(Team).to receive(:add_member).with(participant).and_return(true)
         expect(team.import_team_members(teammembers: ['no name'])).to eq(['no name'])
       end
     end
@@ -185,13 +185,13 @@ describe Team do
   # is set and when anonymized view is not set
   describe '#anonymized_view' do
     it 'returns anonymized name of team when anonymized view is set' do
-      allow(User).to receive(:anonymized_view?).and_return(true)
+      allow(Participant).to receive(:anonymized_view?).and_return(true)
       expect(team.name).to eq 'Anonymized_Team_' + team.id.to_s
       expect(team.name).not_to eq 'no team'
     end
 
     it 'returns real name of team when anonymized view is not set' do
-      allow(User).to receive(:anonymized_view?).and_return(false)
+      allow(Participant).to receive(:anonymized_view?).and_return(false)
       expect(team.name).not_to eq 'Team_' + team.id.to_s
       expect(team.name).to eq 'no team'
     end
@@ -350,7 +350,7 @@ describe Team do
   describe '.export' do
     it 'exports teams to csv' do
       allow(AssignmentTeam).to receive(:where).with(parent_id: 1).and_return([team])
-      allow(TeamsUser).to receive(:where).with(team_id: 1).and_return([team_user])
+      allow(TeamsParticipant).to receive(:where).with(team_id: 1).and_return([team_participant])
       expect(Team.export([], 1, { team_name: 'false' }, AssignmentTeam.new)).to eq([['no team', 'no name']])
     end
   end

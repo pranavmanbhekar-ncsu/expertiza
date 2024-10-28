@@ -114,7 +114,6 @@ FactoryBot.define do
     handle 'handle'
     time_stamp nil
     digital_signature nil
-    can_mentor true
     can_take_quiz true
   end
 
@@ -284,7 +283,7 @@ FactoryBot.define do
   factory :team_participant, class: TeamsParticipant do
     team { AssignmentTeam.first || association(:assignment_team) }
     # Beware: it is fragile to assume that role_id of student is 2 (or any other unchanging value)
-    pariticipant { Participant.where(role_id: 2).first || association(:student) }
+    participant { Participant.first || association(:student) }
   end
 
   factory :team, class: Team do
@@ -335,7 +334,6 @@ FactoryBot.define do
     handle 'handle'
     time_stamp nil
     digital_signature nil
-    can_mentor false
     can_take_quiz true
   end
 
@@ -352,7 +350,6 @@ FactoryBot.define do
     handle 'handle'
     time_stamp nil
     digital_signature nil
-    can_mentor false
     can_take_quiz true
   end
 
