@@ -19,7 +19,7 @@ class AssignmentTeam < Team
   # return that instead for instances where the code uses the current user.
   def user_id
     @current_user.id if !@current_user.nil? && users.include?(@current_user)
-    users.first.id
+    participants.first.user_id
   end
 
   # E1973
@@ -89,10 +89,11 @@ class AssignmentTeam < Team
 
   # Get Participants of the team
   def participants
-    users = self.users
+    participants_all = self[:participants] || []
+    # users = self.users
     participants = []
-    users.each do |user|
-      participant = AssignmentParticipant.find_by(user_id: user.id, parent_id: parent_id)
+    participants_all.each do |participant_entry|
+      participant = AssignmentParticipant.find_by(id: participant_entry.id, parent_id: parent_id)
       participants << participant unless participant.nil?
     end
     participants
@@ -155,10 +156,10 @@ class AssignmentTeam < Team
   end
 
   # Add Participants to the current Assignment Team
-  def add_participant(assignment_id, user)
-    return if AssignmentParticipant.find_by(parent_id: assignment_id, user_id: user.id)
+  def add_participant(assignment_id, participant)
+    return if AssignmentParticipant.find_by(parent_id: assignment_id, _participant_id: participant.id)
 
-    AssignmentParticipant.create(parent_id: assignment_id, user_id: user.id, permission_granted: user.master_permission_granted)
+    AssignmentParticipant.create(parent_id: assignment_id, participant_id: user.id, permission_granted: User.find_by_id(participant.user_id).master_permission_granted)
   end
 
   def hyperlinks
@@ -280,7 +281,7 @@ class AssignmentTeam < Team
   end
 
   # E2121 Refractor create_new_team
-  def create_new_team(user_id, signuptopic)
+  def create_new_team(participant_id, signuptopic)
     t_participant = TeamsParticipant.create(team_id: id, participant_id: participant_id)
     SignedUpTeam.create(topic_id: signuptopic.id, team_id: id, is_waitlisted: 0)
     parent = TeamNode.create(parent_id: signuptopic.assignment_id, node_object_id: id)

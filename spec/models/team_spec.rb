@@ -49,6 +49,7 @@ describe Team do
   describe '#participant?' do
     context 'when participants in current team includes the parameterized participant' do
       it 'returns true' do
+        allow(team).to receive(:participants).and_return([participant])
         expect(team.participant?(participant)).to be true
       end
     end
@@ -351,6 +352,8 @@ describe Team do
     it 'exports teams to csv' do
       allow(AssignmentTeam).to receive(:where).with(parent_id: 1).and_return([team])
       allow(TeamsParticipant).to receive(:where).with(team_id: 1).and_return([team_participant])
+      allow(Participant).to receive(:find).with(id: 1).and_return([participant])
+      allow(User).to receive(:find_by_id).with(id: 1).and_return([user])
       expect(Team.export([], 1, { team_name: 'false' }, AssignmentTeam.new)).to eq([['no team', 'no name']])
     end
   end

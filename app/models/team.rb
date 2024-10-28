@@ -85,7 +85,7 @@ class Team < ApplicationRecord
       can_add_member = true
       t_participant = TeamsParticipant.create(participant_id: participant.id, team_id: id)
       parent = TeamNode.find_by(node_object_id: id)
-      TeamUserNode.create(parent_id: parent.id, node_object_id: t_participant.id)
+      TeamParticipantNode.create(parent_id: parent.id, node_object_id: t_participant.id)
       add_participant(parent_id, participant)
       ExpertizaLogger.info LoggerMessage.new('Model:Team', participant.user_id, "Added member to the team #{id}")
     end
@@ -112,7 +112,7 @@ class Team < ApplicationRecord
     members.each do |member|
       t_participant = TeamsParticipant.create(team_id: new_team.id, participant_id: member.participant_id)
       parent = Object.const_get(parent_model).find(parent_id)
-      TeamUserNode.create(parent_id: parent.id, node_object_id: t_participant.id)
+      TeamParticipantNode.create(parent_id: parent.id, node_object_id: t_participant.id)
     end
   end
 
@@ -260,7 +260,7 @@ class Team < ApplicationRecord
       if options[:team_name] == 'false'
         team_members = TeamsParticipant.where(team_id: team.id)
         team_members.each do |participant|
-          output.push(User.find_by_id(participant.user_id).name)
+          output.push(User.find_by_id(Participant.find(id: participant.participant_id).user_id).name)
         end
       end
       csv << output
