@@ -114,7 +114,6 @@ FactoryBot.define do
     handle 'handle'
     time_stamp nil
     digital_signature nil
-    can_mentor true
     can_take_quiz true
   end
 
@@ -335,7 +334,6 @@ FactoryBot.define do
     handle 'handle'
     time_stamp nil
     digital_signature nil
-    can_mentor false
     can_take_quiz true
   end
 
@@ -352,7 +350,6 @@ FactoryBot.define do
     handle 'handle'
     time_stamp nil
     digital_signature nil
-    can_mentor false
     can_take_quiz true
   end
 
